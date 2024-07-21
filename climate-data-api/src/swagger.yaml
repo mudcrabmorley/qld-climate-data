@@ -1,0 +1,459 @@
+openapi: 3.0.0
+info:
+  title: Express API for QLD Climate Data
+  version: 1.0.0
+servers:
+  - url: http://localhost:3000
+    description: QLD Climate data server
+paths:
+  # * AUTH ROUTES
+
+  /api/auth/login:
+    post:
+      summary: Login with username and password
+      description: Authenticates a user by their email and password, returning a JWT token upon successful authentication.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                  description: User's email address
+                password:
+                  type: string
+                  format: password
+                  description: User's password
+              required:
+                - email
+                - password
+      responses:
+        "200":
+          description: Authentication successful, JWT token returned
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    description: JWT token for authenticated user
+        "401":
+          description: Invalid email or password
+        "500":
+          description: Server error or JWT signing error
+
+  # * USER ROUTES
+
+  /api/user/new:
+    post:
+      summary: Insert a new user
+      description: Creates a new user with the specified email, password, and role.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  format: password
+                role:
+                  type: string
+                  enum: [Teacher, User, Sensor]
+              required:
+                - email
+                - password
+                - role
+      responses:
+        "201":
+          description: User created successfully
+        "400":
+          description: Bad request
+        "401":
+          description: Unauthorized - Authentication required
+        "403":
+          description: Forbidden - Access denied
+
+  /api/user/access:
+    put:
+      summary: Update access level for users
+      description: Updates the role of users created within a specified date range.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                startDate:
+                  type: string
+                  format: date
+                endDate:
+                  type: string
+                  format: date
+                newRole:
+                  type: string
+              required:
+                - startDate
+                - endDate
+                - newRole
+      responses:
+        "200":
+          description: Access level updated successfully
+        "400":
+          description: Bad request
+        "401":
+          description: Unauthorized - Authentication required
+        "403":
+          description: Forbidden - Access denied
+        "500":
+          description: Server error
+
+  /api/user/{id}:
+    delete:
+      summary: Delete a user by ID
+      description: Deletes a single user based on the user ID.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: The user ID
+      responses:
+        "204":
+          description: User deleted successfully
+        "401":
+          description: Unauthorized - Authentication required
+        "403":
+          description: Forbidden - Access denied
+        "404":
+          description: User not found
+        "500":
+          description: Server error
+
+  /api/user/:
+    delete:
+      summary: Delete multiple users
+      description: Deletes multiple users who are of the "User" role and last logged in between two specified dates.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: startDate
+          required: true
+          schema:
+            type: string
+            format: date
+          description: Start date of the login range
+        - in: query
+          name: endDate
+          required: true
+          schema:
+            type: string
+            format: date
+          description: End date of the login range
+      responses:
+        "204":
+          description: Users deleted successfully
+        "401":
+          description: Unauthorized - Authentication required
+        "400":
+          description: Bad Request - Invalid request format or parameters
+        "404":
+          description: Not Found - The specified resource(s) could not be found
+        "403":
+          description: Forbidden - Access denied
+        "500":
+          description: Server error
+
+  # * WEATHER ROUTES
+
+  /api/weather/max-precipitation/{deviceName}:
+    get:
+      summary: Get maximum precipitation
+      description: Get maximum precipitation recorded in the last 5 months for a specific sensor. Accessible to "User" and "Teacher" roles.
+      parameters:
+        - in: path
+          name: deviceName
+          required: true
+          schema:
+            type: string
+          description: Name of the device
+      responses:
+        "200":
+          description: Success
+        "401":
+          description: Unauthorized - Authentication required
+        "403":
+          description: Forbidden - Access denied
+        "404":
+          description: Not Found - The specified device could not be found
+        "500":
+          description: Internal Server Error - A server-side error occurred
+
+  /api/weather/projection/{id}:
+    get:
+      summary: Get a database projection of a single record
+      description: Get a database projection of a single record. Accessible to "User" and "Teacher" roles.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Record ID
+      responses:
+        "200":
+          description: Success
+        "401":
+          description: Unauthorized - Authentication required
+        "403":
+          description: Forbidden - Access denied
+
+  /api/weather/by-device-and-time:
+    get:
+      summary: Get records by 'Device' and 'Time' index
+      description: Get records by 'Device' and 'Time' index. Accessible to "User" and "Teacher" roles.
+      responses:
+        "200":
+          description: Success
+        "401":
+          description: Unauthorized - Authentication required
+        "400":
+          description: Bad Request - Invalid request format or parameters
+        "403":
+          description: Forbidden - Access denied
+        "404":
+          description: Not Found - The specified resource was not found
+        "500":
+          description: Internal Server Error - A server-side error occurred
+
+  /api/weather/max-temperature:
+    get:
+      summary: Get maximum temperature
+      description: Get maximum temperature recorded for all stations for a given Date/Time range. Accessible to "User" and "Teacher" roles.
+      responses:
+        "200":
+          description: Success
+        "400":
+          description: Bad Request - Invalid request format or parameters
+        "401":
+          description: Unauthorized - Authentication required
+        "403":
+          description: Forbidden - Access denied
+        "404":
+          description: Not Found - The specified resource was not found
+        "500":
+          description: Internal Server Error - A server-side error occurred
+
+  /api/weather/{id}:
+    get:
+      summary: Get weather data by ID
+      description: Get weather data by ID. Accessible to "User" and "Teacher" roles.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Weather data ID
+      responses:
+        "200":
+          description: Success
+        "400":
+          description: Bad Request - Invalid request format or parameters
+        "401":
+          description: Unauthorized - Authentication required
+        "403":
+          description: Forbidden - Access denied
+        "404":
+          description: Not Found - The specified resource was not found
+        "500":
+          description: Internal Server Error - A server-side error occurred
+
+  /api/weather/:
+    get:
+      summary: Get all weather data
+      description: Get all weather data. Accessible to "User" and "Teacher" roles.
+      responses:
+        "200":
+          description: Success
+        "400":
+          description: Bad Request - Invalid request format or parameters
+        "401":
+          description: Unauthorized - Authentication required
+        "403":
+          description: Forbidden - Access denied
+        "404":
+          description: Not Found - The specified resource was not found
+        "500":
+          description: Internal Server Error - A server-side error occurred
+
+  /api/weather/add:
+    post:
+      summary: Create weather data
+      description: Create weather data. Accessible to "Sensor" role.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                # Define weather data properties here
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized - Authentication required
+        "403":
+          description: Forbidden - Access denied
+        "500":
+          description: Internal Server Error
+
+  /api/weather/add-bulk:
+    post:
+      summary: Create multiple weather data entries
+      description: Create multiple weather data entries at once. Accessible to "Sensor" role.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: object
+                properties:
+                  # Define weather data properties here
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized - Authentication required
+        "403":
+          description: Forbidden - Access denied
+        "500":
+          description: Internal Server Error
+
+  /api/weather/update/{id}:
+  put:
+    summary: Update weather data by ID
+    description: Update weather data by ID. Accessible to "Teacher" role.
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          description: Weather data ID
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              # Define updatable weather data properties here
+    responses:
+      "200":
+        description: Updated
+      "401":
+        description: Unauthorized - Authentication required
+      "403":
+        description: Forbidden - Access denied
+      "404":
+        description: Weather data not found
+      "500":
+        description: Internal Server Error - Error updating data
+
+  /api/weather/update-bulk:
+    put:
+      summary: Update multiple weather data entries
+      description: Update multiple weather data entries at once. Accessible to "Teacher" role.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: object
+                properties:
+                  # Define updatable weather data properties here
+    responses:
+      "200":
+        description: Updated
+      "401":
+        description: Unauthorized - Authentication required
+      "403":
+        description: Forbidden - Access denied
+      "400":
+        description: Bad Request - Invalid data format or content
+      "500":
+        description: Internal Server Error - Error updating data
+
+  /api/weather/remove/{id}:
+    delete:
+      summary: Delete weather data by ID
+      description: Delete weather data by ID. Accessible to "Teacher" role.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Weather data ID
+    responses:
+      "204":
+        description: Deleted
+      "401":
+        description: Unauthorized - Authentication required
+      "403":
+        description: Forbidden - Access denied
+      "404":
+        description: Not Found - No weather data found with the given ID
+      "500":
+        description: Internal Server Error - Error deleting data
+
+  /api/weather/remove-bulk:
+    delete:
+      summary: Delete multiple weather data entries
+      description: Delete multiple weather data entries at once. Accessible to "Teacher" role.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: object
+                properties:
+                  # Define IDs or criteria for deletion
+    responses:
+      "204":
+        description: Deleted
+      "401":
+        description: Unauthorized - Authentication required
+      "403":
+        description: Forbidden - Access denied
+      "500":
+        description: Internal Server Error - Error deleting data
