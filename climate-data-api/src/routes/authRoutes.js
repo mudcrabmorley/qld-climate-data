@@ -24,6 +24,10 @@ router.post("/login", async (req, res) => {
       return res.status(401).send("Invalid email or password");
     }
 
+    // Update last login time
+    user.lastLogin = new Date();
+    await user.save();
+
     let token;
     try {
       if (!process.env.JWT_SECRET_KEY) {

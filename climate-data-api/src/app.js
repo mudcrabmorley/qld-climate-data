@@ -28,6 +28,7 @@ app.use(cors(corsOptions));
 // Middleware to parse JSON bodies
 app.use(express.json());
 
+// ! LOCAL DATABASE CONNECTION
 // Connect to MongoDB database
 mongoose
   .connect(config.db.uri)
@@ -37,6 +38,11 @@ mongoose
   .catch((err) => {
     console.log("Error connecting to MongoDB", err);
   });
+
+// ! ATLAS DATABASE CONNECTION
+// mongoose.connect(
+//   "mongodb+srv://jakemorley:jakemorley@qldweather.wio72ua.mongodb.net/?retryWrites=true&w=majority&appName=qldWeather"
+// );
 
 // Enable pre-flight requests for all routes
 app.options("*", cors(corsOptions));
