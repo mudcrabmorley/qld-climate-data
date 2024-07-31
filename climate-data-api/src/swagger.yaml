@@ -229,6 +229,29 @@ paths:
     get:
       summary: Get records by 'Device' and 'Time' index
       description: Get records by 'Device' and 'Time' index. Accessible to "User" and "Teacher" roles.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: deviceName
+          required: true
+          schema:
+            type: string
+          description: The name of the weather sensor
+        - in: query
+          name: startTime
+          required: true
+          schema:
+            type: string
+            format: date-time
+          description: The start time of the records
+        - in: query
+          name: endTime
+          required: true
+          schema:
+            type: string
+            format: date-time
+          description: The end time for the records
       responses:
         "200":
           description: Success
@@ -247,19 +270,34 @@ paths:
     get:
       summary: Get maximum temperature
       description: Get maximum temperature recorded for all stations for a given Date/Time range. Accessible to "User" and "Teacher" roles.
+      parameters:
+        - in: query
+          name: startTime
+          required: true
+          schema:
+          type: string
+          format: date-time
+          description: The start time of the records
+        - in: query
+          name: endTime
+          required: true
+          schema:
+          type: string
+          format: date-time
+          description: The end time for the records
       responses:
-        "200":
-          description: Success
-        "400":
-          description: Bad Request - Invalid request format or parameters
-        "401":
-          description: Unauthorized - Authentication required
-        "403":
-          description: Forbidden - Access denied
-        "404":
-          description: Not Found - The specified resource was not found
-        "500":
-          description: Internal Server Error - A server-side error occurred
+      "200":
+        description: Success
+      "400":
+        description: Bad Request - Invalid request format or parameters
+      "401":
+        description: Unauthorized - Authentication required
+      "403":
+        description: Forbidden - Access denied
+      "404":
+        description: Not Found - The specified resource was not found
+      "500":
+        description: Internal Server Error - A server-side error occurred
 
   /api/weather/{id}:
     get:
@@ -355,35 +393,40 @@ paths:
           description: Internal Server Error
 
   /api/weather/update/{id}:
-  put:
-    summary: Update weather data by ID
-    description: Update weather data by ID. Accessible to "Teacher" role.
-    parameters:
-      - in: path
-        name: id
-        required: true
-        schema:
-          type: string
-          description: Weather data ID
-    requestBody:
-      required: true
-      content:
-        application/json:
+    put:
+      summary: Update weather data by ID
+      description: Update weather data by ID. Accessible to "Teacher" role.
+      parameters:
+        - in: path
+          name: id
+          required: true
           schema:
-            type: object
-            properties:
-              # Define updatable weather data properties here
-    responses:
-      "200":
-        description: Updated
-      "401":
-        description: Unauthorized - Authentication required
-      "403":
-        description: Forbidden - Access denied
-      "404":
-        description: Weather data not found
-      "500":
-        description: Internal Server Error - Error updating data
+            type: string
+          description: Weather data ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                temperature:
+                  type: number
+                  description: Temperature value
+                humidity:
+                  type: number
+                  description: Humidity value
+      responses:
+        "200":
+          description: Updated
+        "401":
+          description: Unauthorized - Authentication required
+        "403":
+          description: Forbidden - Access denied
+        "404":
+          description: Weather data not found
+        "500":
+          description: Internal Server Error - Error updating data
 
   /api/weather/update-bulk:
     put:
@@ -398,18 +441,26 @@ paths:
               items:
                 type: object
                 properties:
-                  # Define updatable weather data properties here
-    responses:
-      "200":
-        description: Updated
-      "401":
-        description: Unauthorized - Authentication required
-      "403":
-        description: Forbidden - Access denied
-      "400":
-        description: Bad Request - Invalid data format or content
-      "500":
-        description: Internal Server Error - Error updating data
+                  id:
+                    type: string
+                    description: Weather data ID
+                  temperature:
+                    type: number
+                    description: Temperature value
+                  humidity:
+                    type: number
+                    description: Humidity value
+      responses:
+        "200":
+          description: Updated
+        "400":
+          description: Bad Request - Invalid data format or content
+        "401":
+          description: Unauthorized - Authentication required
+        "403":
+          description: Forbidden - Access denied
+        "500":
+          description: Internal Server Error - Error updating data
 
   /api/weather/remove/{id}:
     delete:
@@ -422,17 +473,17 @@ paths:
           schema:
             type: string
           description: Weather data ID
-    responses:
-      "204":
-        description: Deleted
-      "401":
-        description: Unauthorized - Authentication required
-      "403":
-        description: Forbidden - Access denied
-      "404":
-        description: Not Found - No weather data found with the given ID
-      "500":
-        description: Internal Server Error - Error deleting data
+      responses:
+        "204":
+          description: Deleted
+        "401":
+          description: Unauthorized - Authentication required
+        "403":
+          description: Forbidden - Access denied
+        "404":
+          description: Not Found - No weather data found with the given ID
+        "500":
+          description: Internal Server Error - Error deleting data
 
   /api/weather/remove-bulk:
     delete:
@@ -447,13 +498,15 @@ paths:
               items:
                 type: object
                 properties:
-                  # Define IDs or criteria for deletion
-    responses:
-      "204":
-        description: Deleted
-      "401":
-        description: Unauthorized - Authentication required
-      "403":
-        description: Forbidden - Access denied
-      "500":
-        description: Internal Server Error - Error deleting data
+                  id:
+                    type: string
+                    description: Weather data ID
+      responses:
+        "204":
+          description: Deleted
+        "401":
+          description: Unauthorized - Authentication required
+        "403":
+          description: Forbidden - Access denied
+        "500":
+          description: Internal Server Error - Error deleting data

@@ -1,0 +1,22 @@
+[
+  {
+    "sensor_id": 1,
+    "temperature": 27.2
+  },
+  {
+    "device_name": "weatherSensorBrisbane"
+  },
+  {
+    "is_active": true
+  },
+  {
+    "location": {
+      "latitude": -27.4679,
+      "longitude": 153.0281
+    },
+    "readings": [23.5, 25.2, 22.8]
+  },
+  {
+    "timestamp": "2024-07-31T16:23:48.382Z"
+  }
+]
